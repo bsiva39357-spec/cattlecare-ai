@@ -3,143 +3,38 @@ import tensorflow as tf
 import numpy as np
 import cv2
 from PIL import Image
-import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
+# --- Streamlit Setup ---
 st.set_page_config(page_title="CattleCare AI", page_icon="🐄", layout="wide")
 
-# Target Classes Mapping
-CLASS_NAMES = [
-    'Bovine Pinkeye',
-    'Foot and Mouth Disease',
-    'Healthy',
-    'Lumpy Skin Disease',
-    'Mastitis',
-    'Ringworm'
-]
+CLASS_NAMES = ['bovine_pinkeye', 'fmd', 'healthy', 'lumpy_skin', 'mastitis', 'ringworm']
 
-# Cache Model to Prevent Reload Latency
-@st.cache_resource
-def load_classification_model():
-    return tf.keras.models.load_model('cattlecare_model.keras')
-
-model = load_classification_model()
-
-# Grad-CAM Algorithm
-def make_gradcam_heatmap(img_array, model, last_conv_layer_name="out_relu"):
-    grad_model = tf.keras.models.Model(
-        inputs=[model.inputs],
-        outputs=[model.get_layer(last_conv_layer_name).output, model.output]
-    )
-
-    with tf.GradientTape() as tape:
-        last_conv_layer_output, preds = grad_model(img_array)
-        top_pred_index = tf.argmax(preds[0])
-        top_class_channel = preds[:, top_pred_index]
-
-    grads = tape.gradient(top_class_channel, last_conv_layer_output)
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-
-    last_conv_layer_output = last_conv_layer_output[0]
-    heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
-    heatmap = tf.squeeze(heatmap)
-
-    heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-10)
-    return heatmap.numpy()
-
-def display_gradcam(image, heatmap, alpha=0.4):
-    img = np.array(image)
-    heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
-    heatmap = np.uint8(255 * heatmap)
-    heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
-    superimposed_img = cv2.addWeighted(img, 1 - alpha, heatmap, alpha, 0)
-    return superimposed_img
-
-# UI Navigation
-st.sidebar.title("🐄 CattleCare AI Navigation")
-view = st.sidebar.radio("Select View:", [
-    "Home", 
-    "Disease Detection", 
-    "Explainable AI (XAI)", 
-    "Outbreak Risk Prediction", 
-    "Disease Repository"
-])
-
-if view == "Home":
-    st.title("🐄 CattleCare AI: Intelligent Livestock Disease & Surveillance System")
-    st.subheader("Project Overview")
-    st.markdown("""
-    CattleCare AI combines **Computer Vision (MobileNetV2)** with **Clinical Explainability (Grad-CAM)** 
-    and meteorological risk modeling to support rapid veterinary diagnosis in rural areas.
-    """)
-    st.info("System Status: **Model Active (Validation Accuracy: 94.46%)**")
-
-elif view == "Disease Detection":
-    st.title("🔬 Clinical Disease Diagnosis")
-    uploaded_file = st.file_uploader("Upload Cattle Pathology Image...", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert('RGB')
-        col1, col2 = st.columns(2)
-        with col1:
-            st.image(image, caption="Uploaded Specimen", use_container_width=True)
-
-        # Preprocess
-        img_resized = image.resize((224, 224))
-        img_array = np.array(img_resized) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
-
-        # Inference
-        predictions = model.predict(img_array)
-        predicted_idx = np.argmax(predictions[0])
-        confidence = predictions[0][predicted_idx] * 100
-
-        with col2:
-            st.subheader("Diagnostic Assessment")
-            st.metric(label="Predicted Condition", value=CLASS_NAMES[predicted_idx])
-            st.metric(label="Confidence Score", value=f"{confidence:.2f}%")
-            st.progress(float(confidence / 100))
-
-elif view == "Explainable AI (XAI)":
-    st.title("🔍 Explainable AI: Grad-CAM Saliency Maps")
-    uploaded_file = st.file_uploader("Upload Image for Clinical Visual Inspection...", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert('RGB')
-        img_resized = image.resize((224, 224))
-        img_array = np.array(img_resized) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
-
-        heatmap = make_gradcam_heatmap(img_array, model)
-        cam_result = display_gradcam(image, heatmap)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.image(image, caption="Original Examination Image", use_container_width=True)
-        with col2:
-            st.image(cam_result, caption="Grad-CAM Lesion Focus Area", use_container_width=True)
-        st.success("Heatmap confirms model focus on primary physiological lesions rather than background artifacts.")
-
-elif view == "Outbreak Risk Prediction":
-    st.title("🌦️ Regional Outbreak & Surveillance Forecaster")
-    temp = st.slider("Ambient Temperature (°C):", 15, 45, 30)
-    humidity = st.slider("Relative Humidity (%):", 20, 100, 75)
-    reported_cases = st.number_input("Existing Cluster Reports (Last 14 Days):", 0, 50, 5)
-
-    # Epidemiological heuristic score
-    risk_score = (temp * 0.3) + (humidity * 0.4) + (reported_cases * 2.0)
-
-    st.subheader("Surveillance Risk Evaluation")
-    if risk_score > 60:
-        st.error(f"High Epidemic Risk (Score: {risk_score:.1f}) - Vector intervention required.")
-    elif risk_score > 35:
-        st.warning(f"Moderate Outbreak Susceptibility (Score: {risk_score:.1f}) - Monitor sanitation.")
-    else:
-        st.success(f"Low Epidemiological Risk (Score: {risk_score:.1f}) - Routine conditions.")
-
-elif view == "Disease Repository":
-    st.title("📚 Cattle Pathology Reference")
-    for name in CLASS_NAMES:
-        st.markdown(f"- **{name}**")        'symptoms': 'Inflamed, swollen, painful quarters; abnormal milk secretion (curds, clots, discoloration); toxemia in severe forms.',
+DISEASE_DB = {
+    'lumpy_skin': {
+        'name': 'Lumpy Skin Disease (LSD)',
+        'symptoms': 'Enlarged superficial lymph nodes, firm circumscribed skin nodules (2-5 cm), fever, sudden drop in milk yield.',
+        'causes': 'Capripoxvirus transmitted mainly by blood-feeding arthropod vectors (mosquitoes, stable flies, ticks).',
+        'prevention': 'Strict vector control, restricted livestock movement, mass homologous vaccination.',
+        'treatment': 'Isolate immediate herd. Secondary bacterial infection control via systemic antibiotics, anti-inflammatory drugs, and topical wound antiseptics.'
+    },
+    'fmd': {
+        'name': 'Foot and Mouth Disease (FMD)',
+        'symptoms': 'High pyrexia, vesicular lesions/erosions on tongue, dental pad, hooves, excessive salivation, lameness.',
+        'causes': 'Aphthovirus (Picornaviridae family), airborne aerosol spread and direct contact transmission.',
+        'prevention': 'Regular bi-annual polyvalent vaccination, strict farm biosecurity, mandatory entry quarantine.',
+        'treatment': 'Symptomatic supportive care: Mild potassium permanganate mouth wash, topical antiseptic hoof dressings, soft feed.'
+    },
+    'bovine_pinkeye': {
+        'name': 'Infectious Bovine Keratunctivitis (Pinkeye)',
+        'symptoms': 'Severe lacrimation, photophobia, corneal cloudiness, central ulceration, conjunctival redness.',
+        'causes': 'Moraxella bovis bacterium amplified by high UV radiation and face flies (Musca autumnalis).',
+        'prevention': 'Face fly population mitigation, shade structures against solar radiation, dust suppression.',
+        'treatment': 'Subconjunctival penicillin/oxytetracycline injections, topical antibiotic eye sprays, eye patches for UV shielding.'
+    },
+    'mastitis': {
+        'name': 'Bovine Clinical Mastitis',
+        'symptoms': 'Inflamed, swollen, painful quarters; abnormal milk secretion (curds, clots, discoloration); toxemia in severe forms.',
         'causes': 'Bacterial pathogens (Staphylococcus aureus, Streptococcus uberis, Escherichia coli) entering via teat canal.',
         'prevention': 'Proper milking procedures, pre- and post-milking teat dipping, hygienic dry cow management.',
         'treatment': 'Intramammary antibiotic infusion accompanied by anti-inflammatory therapy under veterinary culture-test guidance.'
