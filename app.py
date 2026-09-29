@@ -143,12 +143,12 @@ elif page == "2️⃣ Disease Detection":
         with col_img:
             st.image(raw_image, caption="Uploaded Image", use_container_width=True)
 
-        with col_pred:
+      with col_pred:
             with st.spinner("Processing image through MobileNetV2 pipeline..."):
-               img_resized = raw_image.resize((224, 224))
-img_array = np.array(img_resized, dtype=np.float32)
-img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
-img_array = np.expand_dims(img_array, axis=0)
+                img_resized = raw_image.resize((224, 224))
+                img_array = np.array(img_resized, dtype=np.float32)
+                img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
+                img_array = np.expand_dims(img_array, axis=0)
                 preds = model.predict(img_array)[0]
                 idx = np.argmax(preds)
                 pred_class = CLASS_NAMES[idx]
@@ -173,15 +173,15 @@ elif page == "3️⃣ Explainable AI (XAI)":
     st.title("🔍 Explainable AI (Grad-CAM Diagnostic Heatmap)")
     st.markdown("Validates AI attention regions to guarantee focus on lesions, tissue, and symptoms.")
 
-    if 'last_image' in st.session_state:
+if 'last_image' in st.session_state:
         raw_image = st.session_state['last_image']
         idx = st.session_state['last_pred_idx']
         pred_class = st.session_state['last_pred_class']
 
         img_resized = raw_image.resize((224, 224))
-img_array = np.array(img_resized, dtype=np.float32)
-img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
-img_array = np.expand_dims(img_array, axis=0)
+        img_array = np.array(img_resized, dtype=np.float32)
+        img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
+        img_array = np.expand_dims(img_array, axis=0)
 
         with st.spinner("Generating Class Activation Maps..."):
             heatmap = generate_gradcam(img_array, model, idx)
