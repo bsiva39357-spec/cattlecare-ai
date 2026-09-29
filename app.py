@@ -127,7 +127,8 @@ elif page == "🔬 Disease Detection":
         with col_pred:
             with st.spinner("Processing image through MobileNetV2 pipeline..."):
                 img_resized = raw_image.resize((224, 224))
-                img_array = np.array(img_resized, dtype=np.float32) / 255.0
+                img_array = np.array(img_resized, dtype=np.float32)
+                img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
                 img_array = np.expand_dims(img_array, axis=0)
 
                 preds = model.predict(img_array)[0]
