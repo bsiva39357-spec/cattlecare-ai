@@ -136,9 +136,9 @@ elif page == "2️⃣ Disease Detection":
     st.title("📷 Vision-Based Cattle Disease Diagnostic")
     uploaded_file = st.file_uploader("Upload Cow/Lesion Image", type=["jpg", "jpeg", "png"])
 
-    if uploaded_file:
+   if uploaded_file:
         raw_image = Image.open(uploaded_file).convert('RGB')
-       col_img, col_pred = st.columns(2)
+        col_img, col_pred = st.columns(2)
 
         with col_img:
             st.image(raw_image, caption="Uploaded Image", use_container_width=True)
