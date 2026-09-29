@@ -144,7 +144,7 @@ elif page == "🔬 Disease Detection":
             st.metric(label="Predicted Condition", value=DISEASE_DB[pred_class]['name'])
             st.metric(label="Confidence Score", value=f"{conf:.2f}%")
             st.progress(min(max(conf / 100.0, 0.0), 1.0))
-
+            st.write(preds)
             st.write(f"**Primary Symptoms:** {DISEASE_DB[pred_class]['symptoms']}")
             st.info(f"**Recommended First Response:** {DISEASE_DB[pred_class]['treatment']}")
 
