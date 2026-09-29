@@ -204,7 +204,6 @@ elif page == "📖 Disease Repository":
         'causes': 'Bacterial pathogens (Staphylococcus aureus, Streptococcus uberis, Escherichia coli) entering via teat canal.',
         'prevention': 'Proper milking procedures, pre- and post-milking teat dipping, hygienic dry cow management.',
         'treatment': 'Intramammary antibiotic infusion accompanied by anti-inflammatory therapy under veterinary culture-test guidance.'
-    },
     'ringworm': {
         'name': 'Bovine Dermatophytosis (Ringworm)',
         'symptoms': 'Circular, raised, crusty, alopecic gray-white lesions predominantly localized on face, neck, and perineum.',
