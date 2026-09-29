@@ -218,7 +218,6 @@ elif page == "📖 Disease Repository":
         'prevention': 'Sustain scheduled preventative immunization and clean housing standards.',
         'treatment': 'No clinical intervention needed. Continue proactive preventive health schedules.'
     }
-}
 
 @st.cache_resource
 def load_model():
