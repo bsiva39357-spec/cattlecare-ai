@@ -138,12 +138,12 @@ elif page == "2️⃣ Disease Detection":
 
     if uploaded_file:
         raw_image = Image.open(uploaded_file).convert('RGB')
-        col_img, col_pred = st.columns(2)
-        
+       col_img, col_pred = st.columns(2)
+
         with col_img:
             st.image(raw_image, caption="Uploaded Image", use_container_width=True)
 
-      with col_pred:
+        with col_pred:
             with st.spinner("Processing image through MobileNetV2 pipeline..."):
                 img_resized = raw_image.resize((224, 224))
                 img_array = np.array(img_resized, dtype=np.float32)
@@ -154,9 +154,9 @@ elif page == "2️⃣ Disease Detection":
                 pred_class = CLASS_NAMES[idx]
                 conf = preds[idx] * 100
 
-            st.session_state['last_image'] = raw_image
-            st.session_state['last_pred_idx'] = idx
-            st.session_state['last_pred_class'] = pred_class
+        st.session_state['last_image'] = raw_image
+        st.session_state['last_pred_idx'] = idx
+        st.session_state['last_pred_class'] = pred_class
 
             st.subheader("Diagnostic Assessment")
             if pred_class == 'healthy':
