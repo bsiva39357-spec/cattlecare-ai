@@ -200,4 +200,4 @@ elif page == "📖 Disease Repository":
             st.write(f"**Pathogen/Cause:** {val['causes']}")
             st.write(f"**Symptoms:** {val['symptoms']}")
             st.write(f"**Biosecurity/Prevention:** {val['prevention']}")
-            st.write(f"**Treatment Guidance:** {val['treatment']}")b
+            st.write(f"**Treatment Guidance:** {val['treatment']}")
